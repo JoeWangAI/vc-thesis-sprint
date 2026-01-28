@@ -1,8 +1,15 @@
 <div class="sprint-title-row">
     <h1 class="sprint-title">{{ current_sprint.name }}</h1>
     <div class="sprint-actions">
-        <button class="btn btn-secondary">Edit Criteria</button>
-        <button class="btn btn-primary">+ Add Source</button>
+        <button class="btn btn-secondary"
+                hx-get="/sprints/{{ current_sprint.id }}/edit"
+                hx-target="#modal-container"
+                hx-swap="innerHTML">
+            Edit Criteria
+        </button>
+        <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="Coming soon">
+            + Add Source
+        </button>
     </div>
 </div>
 

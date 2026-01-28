@@ -126,24 +126,37 @@
             <span class="section-title">Thesis Fit Notes</span>
         </div>
         <textarea class="notes-textarea"
+                  name="notes"
                   placeholder="Add notes on why this company fits (or doesn't fit) the thesis..."
                   hx-post="/companies/{{ company.id }}/notes"
                   hx-trigger="change"
-                  hx-swap="none">{{ company.thesis_fit_notes or '' }}</textarea>
+                  hx-swap="none"
+                  hx-include="this">{{ company.thesis_fit_notes or '' }}</textarea>
     </div>
 </div>
 
 <div class="detail-footer">
+    {% if is_shortlisted %}
     <button class="btn btn-secondary"
             hx-delete="/sprints/{{ current_sprint.id }}/shortlist/{{ company.id }}"
             hx-target="#shortlist-section"
-            hx-swap="innerHTML">
+            hx-swap="innerHTML"
+            hx-on::after-request="htmx.ajax('GET', '/companies/{{ company.id }}?sprint_id={{ current_sprint.id }}', {target: '#detail-panel', swap: 'innerHTML'})">
+        Remove from Shortlist
+    </button>
+    <button class="btn btn-secondary" disabled style="opacity: 0.5; cursor: not-allowed;">
+        Already in Shortlist
+    </button>
+    {% else %}
+    <button class="btn btn-secondary">
         Dismiss
     </button>
     <button class="btn btn-primary" style="background: var(--accent-green);"
             hx-post="/sprints/{{ current_sprint.id }}/shortlist/{{ company.id }}?status=pursue"
             hx-target="#shortlist-section"
-            hx-swap="innerHTML">
+            hx-swap="innerHTML"
+            hx-on::after-request="htmx.ajax('GET', '/companies/{{ company.id }}?sprint_id={{ current_sprint.id }}', {target: '#detail-panel', swap: 'innerHTML'})">
         Add to Shortlist
     </button>
+    {% endif %}
 </div>

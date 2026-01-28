@@ -7,28 +7,28 @@
         </div>
         <div class="modal-content">
             <div class="export-options">
-                <div class="export-option selected" onclick="selectExportOption(this)">
+                <div class="export-option selected" data-format="csv" onclick="selectExportOption(this)">
                     <div class="export-option-icon">📊</div>
                     <div class="export-option-info">
                         <div class="export-option-title">Google Sheets / CSV</div>
                         <div class="export-option-desc">Table format with all funding fields and source links</div>
                     </div>
                 </div>
-                <div class="export-option" onclick="selectExportOption(this)">
+                <div class="export-option" data-format="memo" onclick="selectExportOption(this)">
                     <div class="export-option-icon">📝</div>
                     <div class="export-option-info">
                         <div class="export-option-title">Investment Memo</div>
                         <div class="export-option-desc">Formatted document with thesis rationale and evidence</div>
                     </div>
                 </div>
-                <div class="export-option" onclick="selectExportOption(this)">
+                <div class="export-option" data-format="csv" onclick="selectExportOption(this)">
                     <div class="export-option-icon">🔗</div>
                     <div class="export-option-info">
                         <div class="export-option-title">CRM Import (Affinity/Attio)</div>
-                        <div class="export-option-desc">Push directly to your deal flow pipeline</div>
+                        <div class="export-option-desc">CSV format for CRM import</div>
                     </div>
                 </div>
-                <div class="export-option" onclick="selectExportOption(this)">
+                <div class="export-option" data-format="email" onclick="selectExportOption(this)">
                     <div class="export-option-icon">📧</div>
                     <div class="export-option-info">
                         <div class="export-option-title">Email Summary</div>
@@ -49,7 +49,7 @@
         </div>
         <div class="modal-footer">
             <button class="btn btn-secondary" onclick="closeExportModal()">Cancel</button>
-            <a href="/export?format=csv" class="btn btn-primary" style="text-decoration: none;">
+            <a href="/export?format=csv" id="export-btn" class="btn btn-primary" style="text-decoration: none;">
                 Export {{ shortlist|length if shortlist else 0 }} Companies
             </a>
         </div>
@@ -61,5 +61,12 @@
 function selectExportOption(el) {
     document.querySelectorAll('.export-option').forEach(o => o.classList.remove('selected'));
     el.classList.add('selected');
+
+    // Update export button URL
+    const format = el.getAttribute('data-format');
+    const exportBtn = document.getElementById('export-btn');
+    if (exportBtn) {
+        exportBtn.href = `/export?format=${format}`;
+    }
 }
 </script>

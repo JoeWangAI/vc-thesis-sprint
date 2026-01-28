@@ -101,15 +101,21 @@ async def get_companies(
 
 
 @app.get("/companies/{company_id}", response_class=HTMLResponse)
-async def get_company_detail(request: Request, company_id: str):
+async def get_company_detail(request: Request, company_id: str, sprint_id: str = Query("ai-dev-tools")):
     """Get company detail panel."""
     company = store.get_company(company_id)
-    current_sprint = store.get_sprint("ai-dev-tools")  # TODO: track current sprint
+    current_sprint = store.get_sprint(sprint_id)
+
+    # Check if company is in shortlist
+    is_shortlisted = False
+    if current_sprint:
+        is_shortlisted = any(e.company_id == company_id for e in current_sprint.shortlist)
 
     context = {
         "request": request,
         "company": company,
         "current_sprint": current_sprint,
+        "is_shortlisted": is_shortlisted,
     }
     return templates.TemplateResponse("partials/detail_panel.html", context)
 
@@ -228,11 +234,72 @@ async def create_sprint(request: Request):
     return templates.TemplateResponse("index.html", context)
 
 
+@app.get("/sprints/{sprint_id}/edit", response_class=HTMLResponse)
+async def edit_sprint_form(request: Request, sprint_id: str):
+    """Show edit sprint criteria modal."""
+    sprint = store.get_sprint(sprint_id)
+    return HTMLResponse(f"""
+    <div class="modal-overlay active" id="edit-criteria-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">Edit Criteria - {sprint.name}</span>
+                <button class="close-btn" onclick="document.getElementById('edit-criteria-modal').remove()">×</button>
+            </div>
+            <form hx-post="/sprints/{sprint_id}/update" hx-target="#sprint-header" hx-swap="innerHTML">
+                <div class="modal-content">
+                    <div class="new-sprint-form">
+                        <div class="form-group">
+                            <label class="form-label">Thesis Description</label>
+                            <textarea name="description" class="notes-textarea" required>{sprint.description}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Stage Focus</label>
+                            <input type="text" name="stage_focus" class="form-input" value="{sprint.stage_focus}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Geography</label>
+                            <input type="text" name="geography" class="form-input" value="{sprint.geography}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Last Raise Filter</label>
+                            <input type="text" name="last_raise_filter" class="form-input" value="{sprint.last_raise_filter}">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('edit-criteria-modal').remove()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" onclick="document.getElementById('edit-criteria-modal').remove()">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    """)
+
+
+@app.post("/sprints/{sprint_id}/update", response_class=HTMLResponse)
+async def update_sprint(request: Request, sprint_id: str):
+    """Update sprint criteria."""
+    form = await request.form()
+    sprint = store.get_sprint(sprint_id)
+
+    if sprint:
+        sprint.description = form.get("description", sprint.description)
+        sprint.stage_focus = form.get("stage_focus", sprint.stage_focus)
+        sprint.geography = form.get("geography", sprint.geography)
+        sprint.last_raise_filter = form.get("last_raise_filter", sprint.last_raise_filter)
+
+    context = {
+        "request": request,
+        "current_sprint": sprint,
+    }
+    return templates.TemplateResponse("partials/sprint_header.html", context)
+
+
 @app.get("/export")
-async def export_shortlist(format: str = Query("csv")):
-    """Export shortlist as CSV."""
-    sprint = store.get_sprint("ai-dev-tools")
-    shortlist = store.get_shortlist_for_sprint("ai-dev-tools")
+async def export_shortlist(format: str = Query("csv"), sprint_id: str = Query("ai-dev-tools")):
+    """Export shortlist in various formats."""
+    sprint = store.get_sprint(sprint_id)
+    shortlist = store.get_shortlist_for_sprint(sprint_id)
 
     if format == "csv":
         output = io.StringIO()
@@ -266,6 +333,67 @@ async def export_shortlist(format: str = Query("csv")):
             media_type="text/csv",
             headers={"Content-Disposition": f"attachment; filename=thesis-sprint-shortlist.csv"}
         )
+
+    elif format == "memo":
+        # Generate investment memo
+        output = io.StringIO()
+        output.write(f"# Investment Memo: {sprint.name}\n\n")
+        output.write(f"## Thesis\n{sprint.description}\n\n")
+        output.write(f"## Shortlisted Companies ({len(shortlist)})\n\n")
+
+        for company, entry in shortlist:
+            output.write(f"### {company.name}\n")
+            output.write(f"**Status:** {entry.status.value.capitalize()}\n\n")
+            output.write(f"{company.description}\n\n")
+
+            if company.funding_events:
+                latest = company.funding_events[0]
+                output.write(f"**Latest Funding:** {latest.round_type}")
+                if latest.amount:
+                    output.write(f" - {latest.amount}")
+                if latest.lead:
+                    output.write(f" led by {latest.lead}")
+                output.write(f" ({latest.date.strftime('%B %Y')})\n\n")
+
+            if company.thesis_fit_notes:
+                output.write(f"**Notes:** {company.thesis_fit_notes}\n\n")
+
+            output.write("---\n\n")
+
+        output.seek(0)
+        return StreamingResponse(
+            iter([output.getvalue()]),
+            media_type="text/markdown",
+            headers={"Content-Disposition": f"attachment; filename=investment-memo.md"}
+        )
+
+    elif format == "email":
+        # Generate email summary
+        output = io.StringIO()
+        output.write(f"Subject: {sprint.name} - Shortlist Summary\n\n")
+        output.write(f"Thesis: {sprint.description}\n\n")
+        output.write(f"We've identified {len(shortlist)} companies worth pursuing:\n\n")
+
+        for company, entry in shortlist:
+            output.write(f"• {company.name}")
+            if company.funding_events:
+                latest = company.funding_events[0]
+                output.write(f" - {latest.round_type}")
+                if latest.amount:
+                    output.write(f" ({latest.amount})")
+            output.write(f" [{entry.status.value}]\n")
+
+        output.write("\n\nSee attached for full details.\n")
+        output.seek(0)
+        return StreamingResponse(
+            iter([output.getvalue()]),
+            media_type="text/plain",
+            headers={"Content-Disposition": f"attachment; filename=email-summary.txt"}
+        )
+
+    else:
+        # Default to CSV for CRM import
+        return await export_shortlist(format="csv", sprint_id=sprint_id)
 
 
 if __name__ == "__main__":
