@@ -1,13 +1,11 @@
 {% for sprint in sprints %}
-<div class="sprint-item {% if sprint.id == current_sprint_id %}active{% endif %}"
-     hx-get="/sprints/{{ sprint.id }}"
-     hx-target="#app"
-     hx-swap="innerHTML"
-     hx-push-url="true">
+<a href="/?sprint={{ sprint.id }}"
+   class="sprint-item {% if sprint.id == current_sprint_id %}active{% endif %}"
+   style="text-decoration: none; color: inherit; display: block;">
     <div class="sprint-name">{{ sprint.name }}</div>
     <div class="sprint-meta">
         <span>{{ sprint.company_ids|length }} companies</span>
         <span>{{ sprint.shortlist|length }} shortlisted</span>
     </div>
-</div>
+</a>
 {% endfor %}

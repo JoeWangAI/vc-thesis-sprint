@@ -1175,7 +1175,7 @@ body {
 }
 
 /* Form inputs */
-input[type="text"], textarea {
+input[type="text"], textarea, select {
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: 6px;
@@ -1184,9 +1184,18 @@ input[type="text"], textarea {
     padding: 8px 12px;
 }
 
-input[type="text"]:focus, textarea:focus {
+input[type="text"]:focus, textarea:focus, select:focus {
     outline: none;
     border-color: var(--accent-blue);
+}
+
+select {
+    cursor: pointer;
+}
+
+select option {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
 }
 
 /* New sprint form */

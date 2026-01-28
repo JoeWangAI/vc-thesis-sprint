@@ -3,7 +3,7 @@ Thesis Sprint - VC Target Discovery Tool
 FastAPI application with HTMX frontend
 """
 from fastapi import FastAPI, Request, Query
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from typing import Optional
@@ -37,9 +37,9 @@ def get_common_context(sprint_id: str = "ai-dev-tools"):
 
 
 @app.get("/", response_class=HTMLResponse)
-async def index(request: Request):
-    """Main page - shows first sprint by default."""
-    context = get_common_context("ai-dev-tools")
+async def index(request: Request, sprint: str = Query("ai-dev-tools")):
+    """Main page - shows specified sprint or first sprint by default."""
+    context = get_common_context(sprint)
     context["request"] = request
     context["selected_company"] = None
     context["selected_company_id"] = None
@@ -195,7 +195,7 @@ async def new_sprint_form(request: Request):
                 <span class="modal-title">Create New Sprint</span>
                 <button class="close-btn" onclick="document.getElementById('new-sprint-modal').remove()">×</button>
             </div>
-            <form hx-post="/sprints" hx-target="#app" hx-swap="innerHTML">
+            <form method="POST" action="/sprints">
                 <div class="modal-content">
                     <div class="new-sprint-form">
                         <div class="form-group">
@@ -218,7 +218,7 @@ async def new_sprint_form(request: Request):
     """)
 
 
-@app.post("/sprints", response_class=HTMLResponse)
+@app.post("/sprints")
 async def create_sprint(request: Request):
     """Create a new sprint."""
     form = await request.form()
@@ -227,17 +227,25 @@ async def create_sprint(request: Request):
 
     new_sprint = store.create_sprint(name, description)
 
-    context = get_common_context(new_sprint.id)
-    context["request"] = request
-    context["selected_company"] = None
-    context["selected_company_id"] = None
-    return templates.TemplateResponse("index.html", context)
+    # Redirect to the new sprint page
+    return RedirectResponse(url=f"/?sprint={new_sprint.id}", status_code=303)
 
 
 @app.get("/sprints/{sprint_id}/edit", response_class=HTMLResponse)
 async def edit_sprint_form(request: Request, sprint_id: str):
     """Show edit sprint criteria modal."""
     sprint = store.get_sprint(sprint_id)
+
+    # Define dropdown options
+    stage_options = ["Pre-Seed", "Seed", "Seed – Series A", "Seed – Series B", "Series A", "Series A – B", "Series B", "Series B – C", "Series C+", "Growth", "All Stages"]
+    geo_options = ["US", "US, Canada", "North America", "US, EU", "Global", "Europe", "Asia", "Latin America"]
+    raise_options = ["Within 6 months", "Within 12 months", "Within 18 months", "Within 24 months", "Within 36 months", "Any time"]
+
+    # Create select elements with current value selected
+    stage_select = "".join(f'<option value="{opt}" {"selected" if opt == sprint.stage_focus else ""}>{opt}</option>' for opt in stage_options)
+    geo_select = "".join(f'<option value="{opt}" {"selected" if opt == sprint.geography else ""}>{opt}</option>' for opt in geo_options)
+    raise_select = "".join(f'<option value="{opt}" {"selected" if opt == sprint.last_raise_filter else ""}>{opt}</option>' for opt in raise_options)
+
     return HTMLResponse(f"""
     <div class="modal-overlay active" id="edit-criteria-modal">
         <div class="modal">
@@ -254,15 +262,21 @@ async def edit_sprint_form(request: Request, sprint_id: str):
                         </div>
                         <div class="form-group">
                             <label class="form-label">Stage Focus</label>
-                            <input type="text" name="stage_focus" class="form-input" value="{sprint.stage_focus}">
+                            <select name="stage_focus" class="form-input">
+                                {stage_select}
+                            </select>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Geography</label>
-                            <input type="text" name="geography" class="form-input" value="{sprint.geography}">
+                            <select name="geography" class="form-input">
+                                {geo_select}
+                            </select>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Last Raise Filter</label>
-                            <input type="text" name="last_raise_filter" class="form-input" value="{sprint.last_raise_filter}">
+                            <select name="last_raise_filter" class="form-input">
+                                {raise_select}
+                            </select>
                         </div>
                     </div>
                 </div>
