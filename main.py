@@ -53,6 +53,39 @@ async def index(request: Request, sprint: str = Query("ai-dev-tools")):
     return templates.TemplateResponse("index.html", context)
 
 
+@app.get("/sprints/new", response_class=HTMLResponse)
+async def new_sprint_form(request: Request):
+    """Show new sprint form modal."""
+    return HTMLResponse("""
+    <div class="modal-overlay active" id="new-sprint-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">Create New Sprint</span>
+                <button class="close-btn" onclick="document.getElementById('new-sprint-modal').remove()">×</button>
+            </div>
+            <form method="POST" action="/sprints">
+                <div class="modal-content">
+                    <div class="new-sprint-form">
+                        <div class="form-group">
+                            <label class="form-label">Sprint Name</label>
+                            <input type="text" name="name" class="form-input" placeholder="e.g., AI Developer Tools" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Thesis Description</label>
+                            <textarea name="description" class="notes-textarea" placeholder="Describe the thesis and target company characteristics..." required></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('new-sprint-modal').remove()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Sprint</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    """)
+
+
 @app.get("/sprints/{sprint_id}", response_class=HTMLResponse)
 async def get_sprint(request: Request, sprint_id: str):
     """Load a sprint - returns full page for HTMX swap."""
@@ -190,39 +223,6 @@ async def update_notes(request: Request, company_id: str):
         company.thesis_fit_notes = notes
 
     return HTMLResponse(status_code=204)
-
-
-@app.get("/sprints/new", response_class=HTMLResponse)
-async def new_sprint_form(request: Request):
-    """Show new sprint form modal."""
-    return HTMLResponse("""
-    <div class="modal-overlay active" id="new-sprint-modal">
-        <div class="modal">
-            <div class="modal-header">
-                <span class="modal-title">Create New Sprint</span>
-                <button class="close-btn" onclick="document.getElementById('new-sprint-modal').remove()">×</button>
-            </div>
-            <form method="POST" action="/sprints">
-                <div class="modal-content">
-                    <div class="new-sprint-form">
-                        <div class="form-group">
-                            <label class="form-label">Sprint Name</label>
-                            <input type="text" name="name" class="form-input" placeholder="e.g., AI Developer Tools" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Thesis Description</label>
-                            <textarea name="description" class="notes-textarea" placeholder="Describe the thesis and target company characteristics..." required></textarea>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('new-sprint-modal').remove()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create Sprint</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    """)
 
 
 @app.post("/sprints")
