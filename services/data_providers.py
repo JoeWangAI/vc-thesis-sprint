@@ -8,7 +8,10 @@ from datetime import datetime
 import httpx
 from bs4 import BeautifulSoup
 import time
-from models import Claim, Source
+import os
+import uuid
+from anthropic import Anthropic
+from models import Claim, Source, ConfidenceLevel, ClaimStatus
 
 
 class DataProvider(ABC):
@@ -60,6 +63,10 @@ class PublicWebProvider(DataProvider):
         self.rate_limit_delay = 1.0  # 1 second between requests
         self.last_request_time = 0
 
+        # Claude API for information extraction
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        self.anthropic = Anthropic(api_key=api_key) if api_key else None
+
     def fetch_funding_claims(
         self,
         company_name: str,
@@ -69,9 +76,9 @@ class PublicWebProvider(DataProvider):
         Fetch funding claims from public web sources.
 
         Strategy:
-        1. Search for "[company name] funding round"
-        2. Extract structured data from search results and pages
-        3. Return claims with source attribution
+        1. Use Claude to research funding information
+        2. Extract structured claims with source attribution
+        3. Return claims for conflict resolution
 
         Args:
             company_name: Company name
@@ -80,9 +87,159 @@ class PublicWebProvider(DataProvider):
         Returns:
             List of Claim objects
         """
-        # TODO: Implement web scraping logic
-        # For Phase 1, return empty list (will implement in Phase 3)
-        return []
+        if not self.anthropic:
+            print(f"No Anthropic API key available for validation")
+            return []
+
+        try:
+            # Use Claude to research funding information
+            claims = self._research_with_claude(company_name, domain)
+            return claims
+
+        except Exception as e:
+            print(f"Error fetching funding claims for {company_name}: {e}")
+            return []
+
+    def _research_with_claude(
+        self,
+        company_name: str,
+        domain: Optional[str]
+    ) -> List[Claim]:
+        """Use Claude to research funding information."""
+        prompt = f"""Research the most recent funding information for {company_name}.
+
+IMPORTANT: Only provide information you're confident about. For any uncertain information, mark confidence as "low" and include a note explaining the uncertainty.
+
+Provide the following information in JSON format:
+
+{{
+  "last_round_date": "YYYY-MM" or null,
+  "last_round_type": "Seed/Series A/Series B/etc" or null,
+  "amount": "$XM" or null,
+  "lead_investor": "Investor name" or null,
+  "post_money_valuation": "Valuation or estimate" or null,
+  "valuation_basis": "direct/secondary/implied/rumor/estimate",
+  "sources": [
+    {{
+      "url": "source URL",
+      "source_type": "company_press/sec_filing/business_press/investor_blog/wikipedia/social/unknown",
+      "title": "Article title or source name",
+      "confidence": "high/medium/low"
+    }}
+  ],
+  "overall_confidence": "high/medium/low",
+  "notes": "Any caveats or uncertainties"
+}}
+
+Return ONLY the JSON, no markdown formatting or explanation."""
+
+        try:
+            response = self.anthropic.messages.create(
+                model="claude-sonnet-4-5-20250929",
+                max_tokens=2000,
+                temperature=0.1,
+                messages=[{
+                    "role": "user",
+                    "content": prompt
+                }]
+            )
+
+            # Parse response into Claim objects
+            import json
+            json_text = response.content[0].text.strip()
+            if json_text.startswith("```"):
+                lines = json_text.split("\n")
+                json_text = "\n".join(lines[1:-1]) if len(lines) > 2 else json_text
+                json_text = json_text.replace("```json", "").replace("```", "").strip()
+
+            data = json.loads(json_text)
+            claims = self._convert_to_claims(company_name, data)
+            return claims
+
+        except Exception as e:
+            print(f"Claude research error: {e}")
+            return []
+
+    def _convert_to_claims(
+        self,
+        company_name: str,
+        data: Dict
+    ) -> List[Claim]:
+        """Convert research data to Claim objects."""
+        claims = []
+
+        # Create sources
+        sources = []
+        for source_data in data.get("sources", []):
+            source = Source(
+                id=str(uuid.uuid4()),
+                url=source_data.get("url", ""),
+                source_type=source_data.get("source_type", "unknown"),
+                title=source_data.get("title", ""),
+                timestamp=datetime.now()
+            )
+            sources.append(source)
+
+        # Map confidence strings to enum
+        conf_map = {
+            "high": ConfidenceLevel.HIGH,
+            "medium": ConfidenceLevel.MEDIUM,
+            "low": ConfidenceLevel.LOW
+        }
+        overall_conf = conf_map.get(data.get("overall_confidence", "medium"), ConfidenceLevel.MEDIUM)
+
+        # Create claims for each field
+        if data.get("last_round_date"):
+            claims.append(Claim(
+                id=str(uuid.uuid4()),
+                company_id="",  # Will be set by caller
+                statement=f"Last round date: {data['last_round_date']}",
+                sources=sources,
+                confidence=overall_conf,
+                status=ClaimStatus.VERIFIED
+            ))
+
+        if data.get("last_round_type"):
+            claims.append(Claim(
+                id=str(uuid.uuid4()),
+                company_id="",
+                statement=f"Last round type: {data['last_round_type']}",
+                sources=sources,
+                confidence=overall_conf,
+                status=ClaimStatus.VERIFIED
+            ))
+
+        if data.get("amount"):
+            claims.append(Claim(
+                id=str(uuid.uuid4()),
+                company_id="",
+                statement=f"Amount: {data['amount']}",
+                sources=sources,
+                confidence=overall_conf,
+                status=ClaimStatus.VERIFIED
+            ))
+
+        if data.get("lead_investor"):
+            claims.append(Claim(
+                id=str(uuid.uuid4()),
+                company_id="",
+                statement=f"Lead investor: {data['lead_investor']}",
+                sources=sources,
+                confidence=overall_conf,
+                status=ClaimStatus.VERIFIED
+            ))
+
+        if data.get("post_money_valuation"):
+            claims.append(Claim(
+                id=str(uuid.uuid4()),
+                company_id="",
+                statement=f"Valuation: {data['post_money_valuation']} ({data.get('valuation_basis', 'unknown')})",
+                sources=sources,
+                confidence=overall_conf,
+                status=ClaimStatus.VERIFIED
+            ))
+
+        return claims
 
     def search_company(self, company_name: str) -> Optional[Dict]:
         """

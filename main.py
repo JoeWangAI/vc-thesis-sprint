@@ -13,6 +13,11 @@ import io
 from models import ShortlistStatus, ClaimStatus
 from services.data_store import store
 from services.discovery import discovery_service
+from services.validation import validation_service
+from services.data_providers import default_provider
+
+# Initialize validation service with data provider
+validation_service.data_provider = default_provider
 
 app = FastAPI(title="Thesis Sprint")
 
@@ -347,6 +352,49 @@ async def discover_candidates(request: Request, sprint_id: str):
         "show_buckets": True
     }
     return templates.TemplateResponse("partials/company_list.html", context)
+
+
+@app.post("/companies/{company_id}/validate", response_class=HTMLResponse)
+async def validate_company(request: Request, company_id: str, sprint_id: str = Query("ai-dev-tools")):
+    """Validate funding context for a company."""
+    company = store.get_company(company_id)
+    if not company:
+        return HTMLResponse(status_code=404)
+
+    # Validate funding information
+    funding_snapshot, claims, has_conflicts, resolution_note = validation_service.validate_company_funding(
+        company_name=company.name,
+        domain=company.website,
+        demo_mode=False
+    )
+
+    # Update company with validation results
+    if funding_snapshot:
+        company.funding_snapshot = funding_snapshot
+        company.validation_status = "validated"
+
+        # Update claims
+        for claim in claims:
+            claim.company_id = company.id
+        company.claims = claims
+
+        # Update confidence based on validation
+        company.confidence = funding_snapshot.overall_confidence
+
+    else:
+        company.validation_status = "failed"
+
+    # Return updated detail panel
+    current_sprint = store.get_sprint(sprint_id)
+    is_shortlisted = any(e.company_id == company_id for e in current_sprint.shortlist) if current_sprint else False
+
+    context = {
+        "request": request,
+        "company": company,
+        "current_sprint": current_sprint,
+        "is_shortlisted": is_shortlisted,
+    }
+    return templates.TemplateResponse("partials/detail_panel.html", context)
 
 
 @app.get("/export")

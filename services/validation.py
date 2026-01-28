@@ -4,7 +4,9 @@ Handles conflict resolution using source trust hierarchy.
 """
 from typing import List, Dict, Optional, Tuple
 from datetime import datetime
-from models import Claim, Source, FundingEvent, Company, Confidence
+import uuid
+import re
+from models import Claim, Source, FundingEvent, Company, Confidence, FreshnessLevel, FundingSnapshot
 
 
 # Source trust hierarchy (higher = more trusted)
@@ -34,7 +36,7 @@ class ValidationService:
         company_name: str,
         domain: Optional[str] = None,
         demo_mode: bool = False
-    ) -> Tuple[List[FundingEvent], List[Claim], bool, Optional[str]]:
+    ) -> Tuple[Optional[FundingSnapshot], List[Claim], bool, Optional[str]]:
         """
         Validate funding context for a company.
 
@@ -44,7 +46,7 @@ class ValidationService:
             demo_mode: If True, use fixtures
 
         Returns:
-            Tuple of (funding_events, claims, has_conflicts, resolution_note)
+            Tuple of (funding_snapshot, claims, has_conflicts, resolution_note)
         """
         if demo_mode or not self.data_provider:
             return self._validate_demo(company_name)
@@ -54,18 +56,18 @@ class ValidationService:
             claims = self.data_provider.fetch_funding_claims(company_name, domain)
 
             # Resolve conflicts and build funding snapshot
-            funding_events, has_conflicts, resolution_note = self._resolve_funding_claims(claims)
+            funding_snapshot, has_conflicts, resolution_note = self._resolve_funding_claims(claims)
 
-            return funding_events, claims, has_conflicts, resolution_note
+            return funding_snapshot, claims, has_conflicts, resolution_note
 
         except Exception as e:
             print(f"Validation error for {company_name}: {e}")
-            return [], [], False, None
+            return None, [], False, None
 
     def _resolve_funding_claims(
         self,
         claims: List[Claim]
-    ) -> Tuple[List[FundingEvent], bool, Optional[str]]:
+    ) -> Tuple[Optional[FundingSnapshot], bool, Optional[str]]:
         """
         Resolve conflicting claims using source trust hierarchy.
 
@@ -73,56 +75,139 @@ class ValidationService:
             claims: List of claims to resolve
 
         Returns:
-            Tuple of (funding_events, has_conflicts, resolution_note)
+            Tuple of (funding_snapshot, has_conflicts, resolution_note)
         """
         if not claims:
-            return [], False, None
+            return None, False, None
 
-        # Group claims by funding round (approximate by date similarity)
+        # Group claims by funding round (for MVP, assumes single latest round)
         rounds_dict = self._group_claims_by_round(claims)
 
-        funding_events = []
+        # Resolve the latest round
+        snapshot = None
         has_conflicts = False
         resolution_notes = []
 
-        for round_key, round_claims in rounds_dict.items():
-            # Resolve each field for this round
-            resolved_round, conflicts = self._resolve_round_fields(round_claims)
+        if "latest" in rounds_dict:
+            snapshot, conflicts = self._resolve_round_fields(rounds_dict["latest"])
             if conflicts:
                 has_conflicts = True
                 resolution_notes.extend(conflicts)
 
-            if resolved_round:
-                funding_events.append(resolved_round)
-
-        # Sort by date (most recent first)
-        funding_events.sort(key=lambda e: e.date, reverse=True)
-
         resolution_note = "; ".join(resolution_notes) if resolution_notes else None
 
-        return funding_events, has_conflicts, resolution_note
+        return snapshot, has_conflicts, resolution_note
 
     def _group_claims_by_round(self, claims: List[Claim]) -> Dict[str, List[Claim]]:
         """Group claims by funding round based on date and round type."""
-        # TODO: Implement smart grouping logic
-        # For now, return single group
-        return {"default": claims}
+        # For MVP, assume all claims are about the same (most recent) round
+        # In production, would need more sophisticated grouping logic
+        if not claims:
+            return {}
+        return {"latest": claims}
 
     def _resolve_round_fields(
         self,
         claims: List[Claim]
-    ) -> Tuple[Optional[FundingEvent], List[str]]:
-        """Resolve all fields for a single funding round."""
-        # TODO: Implement field-by-field resolution using source trust
-        # For now, return None
-        return None, []
+    ) -> Tuple[Optional[FundingSnapshot], List[str]]:
+        """Resolve all fields for a single funding round using source trust."""
+        if not claims:
+            return None, []
+
+        # Extract field values from claim statements
+        date_val = None
+        round_type = None
+        amount = None
+        lead = None
+        valuation = None
+        valuation_basis = None
+        all_sources = []
+
+        conflicts = []
+
+        for claim in claims:
+            statement = claim.statement
+            all_sources.extend(claim.sources)
+
+            # Parse claim statement
+            if "Last round date:" in statement:
+                date_str = statement.split(": ")[1].strip()
+                try:
+                    date_val = datetime.strptime(date_str, "%Y-%m")
+                except:
+                    pass
+
+            elif "Last round type:" in statement:
+                round_type = statement.split(": ")[1].strip()
+
+            elif "Amount:" in statement:
+                amount = statement.split(": ")[1].strip()
+
+            elif "Lead investor:" in statement:
+                lead = statement.split(": ")[1].strip()
+
+            elif "Valuation:" in statement:
+                parts = statement.split(": ")[1].strip()
+                if "(" in parts:
+                    valuation = parts.split("(")[0].strip()
+                    valuation_basis = parts.split("(")[1].rstrip(")")
+                else:
+                    valuation = parts
+
+        # Calculate overall confidence
+        avg_conf = self._calc_avg_confidence([c.confidence for c in claims])
+
+        # Determine freshness
+        freshness = FreshnessLevel.RECENT
+        if date_val:
+            months_ago = (datetime.now() - date_val).days / 30
+            if months_ago < 3:
+                freshness = FreshnessLevel.FRESH
+            elif months_ago < 12:
+                freshness = FreshnessLevel.RECENT
+            elif months_ago < 24:
+                freshness = FreshnessLevel.STALE
+            else:
+                freshness = FreshnessLevel.OLD
+
+        # Build funding snapshot
+        snapshot = FundingSnapshot(
+            last_round_date=date_val,
+            last_round_type=round_type,
+            amount=amount,
+            lead_investor=lead,
+            post_money_valuation=valuation,
+            valuation_confidence=avg_conf,
+            valuation_basis=valuation_basis,
+            sources=all_sources[:5],  # Top 5 sources
+            overall_confidence=avg_conf,
+            has_conflicts=False,  # MVP: skip complex conflict detection
+            resolution_note=None
+        )
+
+        return snapshot, conflicts
+
+    def _calc_avg_confidence(self, confidences: List[Confidence]) -> Confidence:
+        """Calculate average confidence level."""
+        if not confidences:
+            return Confidence.MEDIUM
+
+        conf_values = {"high": 3, "medium": 2, "low": 1}
+        avg = sum(conf_values.get(c.value, 2) for c in confidences) / len(confidences)
+
+        if avg >= 2.5:
+            return Confidence.HIGH
+        elif avg >= 1.5:
+            return Confidence.MEDIUM
+        else:
+            return Confidence.LOW
 
     def _validate_demo(
         self,
         company_name: str
-    ) -> Tuple[List[FundingEvent], List[Claim], bool, Optional[str]]:
+    ) -> Tuple[Optional[FundingSnapshot], List[Claim], bool, Optional[str]]:
         """Return demo validation results."""
-        return [], [], False, None
+        return None, [], False, None
 
     def get_source_trust_level(self, source: Source) -> int:
         """Get trust level for a source based on its type."""
@@ -181,5 +266,5 @@ class ValidationService:
         return "unknown"
 
 
-# Global instance
+# Global instance (will be initialized with data provider in main.py)
 validation_service = ValidationService()

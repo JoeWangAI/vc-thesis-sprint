@@ -32,6 +32,89 @@
         </div>
     </div>
 
+    <!-- Validation Section -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-title">Funding Validation</span>
+            {% if company.validation_status == "pending" %}
+            <button class="btn btn-small btn-primary"
+                    hx-post="/companies/{{ company.id }}/validate?sprint_id={{ current_sprint.id }}"
+                    hx-target="#detail-panel"
+                    hx-swap="innerHTML"
+                    hx-indicator="#validation-indicator">
+                Validate Funding
+            </button>
+            {% elif company.validation_status == "validated" %}
+            <span class="validation-status validated">✓ Validated</span>
+            {% elif company.validation_status == "failed" %}
+            <span class="validation-status failed">✗ Validation Failed</span>
+            {% endif %}
+        </div>
+        <div id="validation-indicator" class="htmx-indicator">Validating...</div>
+
+        {% if company.funding_snapshot %}
+        <div class="funding-snapshot">
+            <div class="snapshot-row">
+                <span class="snapshot-label">Last Round:</span>
+                <span class="snapshot-value">
+                    {{ company.funding_snapshot.last_round_type or "N/A" }}
+                    {% if company.funding_snapshot.has_conflicts %}
+                    <span class="conflict-badge" title="Conflicting reports">⚠ Conflict</span>
+                    {% endif %}
+                </span>
+            </div>
+            <div class="snapshot-row">
+                <span class="snapshot-label">Date:</span>
+                <span class="snapshot-value">
+                    {% if company.funding_snapshot.last_round_date %}
+                    {{ company.funding_snapshot.last_round_date.strftime('%B %Y') }}
+                    {% else %}
+                    N/A
+                    {% endif %}
+                </span>
+            </div>
+            <div class="snapshot-row">
+                <span class="snapshot-label">Amount:</span>
+                <span class="snapshot-value">{{ company.funding_snapshot.amount or "N/A" }}</span>
+            </div>
+            <div class="snapshot-row">
+                <span class="snapshot-label">Lead Investor:</span>
+                <span class="snapshot-value">{{ company.funding_snapshot.lead_investor or "N/A" }}</span>
+            </div>
+            {% if company.funding_snapshot.post_money_valuation %}
+            <div class="snapshot-row">
+                <span class="snapshot-label">Valuation:</span>
+                <span class="snapshot-value">
+                    {{ company.funding_snapshot.post_money_valuation }}
+                    <span class="valuation-basis">({{ company.funding_snapshot.valuation_basis or "estimate" }})</span>
+                </span>
+            </div>
+            {% endif %}
+            <div class="snapshot-row">
+                <span class="snapshot-label">Confidence:</span>
+                <span class="snapshot-value confidence-{{ company.funding_snapshot.overall_confidence.value }}">
+                    {{ company.funding_snapshot.overall_confidence.value|capitalize }}
+                </span>
+            </div>
+            {% if company.funding_snapshot.sources %}
+            <div class="snapshot-row">
+                <span class="snapshot-label">Sources:</span>
+                <div class="source-links">
+                    {% for source in company.funding_snapshot.sources[:3] %}
+                    <a href="{{ source.url }}" target="_blank" class="source-link">{{ source.title }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% if company.funding_snapshot.resolution_note %}
+            <div class="resolution-note">
+                <strong>Resolution:</strong> {{ company.funding_snapshot.resolution_note }}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
     <!-- Funding Events -->
     <div class="section">
         <div class="section-header">
