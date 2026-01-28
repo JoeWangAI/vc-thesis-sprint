@@ -15,6 +15,7 @@ from services.data_store import store
 from services.discovery import discovery_service
 from services.validation import validation_service
 from services.data_providers import default_provider
+from services.export import export_service
 
 # Initialize validation service with data provider
 validation_service.data_provider = default_provider
@@ -410,23 +411,52 @@ async def export_shortlist(format: str = Query("csv"), sprint_id: str = Query("a
         # Header
         writer.writerow([
             "Company", "Status", "Stage", "Last Round", "Date", "Amount",
-            "Lead Investor", "Confidence", "Notes", "Sources"
+            "Lead Investor", "Valuation", "Confidence", "Fit Score", "Notes", "Source Links"
         ])
 
         # Data
         for company, entry in shortlist:
-            latest = company.funding_events[0] if company.funding_events else None
+            # Prefer funding snapshot if available, otherwise use funding events
+            if company.funding_snapshot:
+                fs = company.funding_snapshot
+                round_type = fs.last_round_type or ""
+                date = fs.last_round_date.strftime("%Y-%m-%d") if fs.last_round_date else ""
+                amount = fs.amount or ""
+                lead = fs.lead_investor or ""
+                valuation = fs.post_money_valuation or ""
+                confidence = fs.overall_confidence.value
+                source_links = "; ".join([s.url for s in fs.sources[:3]]) if fs.sources else ""
+            elif company.funding_events:
+                latest = company.funding_events[0]
+                round_type = latest.round_type
+                date = latest.date.strftime("%Y-%m-%d")
+                amount = latest.amount or ""
+                lead = latest.lead or ""
+                valuation = latest.valuation_signal or ""
+                confidence = company.confidence.value
+                source_links = ""
+            else:
+                round_type = ""
+                date = ""
+                amount = ""
+                lead = ""
+                valuation = ""
+                confidence = company.confidence.value
+                source_links = ""
+
             writer.writerow([
                 company.name,
                 entry.status.value,
                 company.stage or "",
-                latest.round_type if latest else "",
-                latest.date.strftime("%Y-%m-%d") if latest else "",
-                latest.amount or "" if latest else "",
-                latest.lead or "" if latest else "",
-                company.confidence.value,
+                round_type,
+                date,
+                amount,
+                lead,
+                valuation,
+                confidence,
+                company.fit_score if hasattr(company, 'fit_score') else 0,
                 company.thesis_fit_notes or "",
-                company.source_count
+                source_links
             ])
 
         output.seek(0)
@@ -491,6 +521,22 @@ async def export_shortlist(format: str = Query("csv"), sprint_id: str = Query("a
             iter([output.getvalue()]),
             media_type="text/plain",
             headers={"Content-Disposition": f"attachment; filename=email-summary.txt"}
+        )
+
+    elif format == "docx":
+        # Generate Word document
+        doc = export_service.generate_word_memo(sprint, shortlist)
+
+        # Save to bytes buffer
+        from io import BytesIO
+        buffer = BytesIO()
+        doc.save(buffer)
+        buffer.seek(0)
+
+        return StreamingResponse(
+            buffer,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={"Content-Disposition": f"attachment; filename=investment-memo-{sprint.id}.docx"}
         )
 
     else:
