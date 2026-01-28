@@ -1,0 +1,19 @@
+<div class="shortlist-header">
+    <span class="section-label">Current Shortlist</span>
+    <span class="shortlist-count">{{ shortlist|length }}</span>
+</div>
+<div class="shortlist-items">
+    {% for company, entry in shortlist %}
+    <div class="shortlist-item">
+        <div class="shortlist-item-status {{ entry.status.value }}"></div>
+        <span>{{ company.name }}</span>
+    </div>
+    {% else %}
+    <div style="font-size: 12px; color: var(--text-muted); padding: 8px;">
+        No companies shortlisted yet
+    </div>
+    {% endfor %}
+</div>
+<button class="export-btn" onclick="openExportModal()">
+    Export Shortlist
+</button>

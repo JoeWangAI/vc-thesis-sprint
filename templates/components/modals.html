@@ -1,0 +1,65 @@
+<!-- Export Modal -->
+<div class="modal-overlay" id="export-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title">Export Shortlist</span>
+            <button class="close-btn" onclick="closeExportModal()">×</button>
+        </div>
+        <div class="modal-content">
+            <div class="export-options">
+                <div class="export-option selected" onclick="selectExportOption(this)">
+                    <div class="export-option-icon">📊</div>
+                    <div class="export-option-info">
+                        <div class="export-option-title">Google Sheets / CSV</div>
+                        <div class="export-option-desc">Table format with all funding fields and source links</div>
+                    </div>
+                </div>
+                <div class="export-option" onclick="selectExportOption(this)">
+                    <div class="export-option-icon">📝</div>
+                    <div class="export-option-info">
+                        <div class="export-option-title">Investment Memo</div>
+                        <div class="export-option-desc">Formatted document with thesis rationale and evidence</div>
+                    </div>
+                </div>
+                <div class="export-option" onclick="selectExportOption(this)">
+                    <div class="export-option-icon">🔗</div>
+                    <div class="export-option-info">
+                        <div class="export-option-title">CRM Import (Affinity/Attio)</div>
+                        <div class="export-option-desc">Push directly to your deal flow pipeline</div>
+                    </div>
+                </div>
+                <div class="export-option" onclick="selectExportOption(this)">
+                    <div class="export-option-icon">📧</div>
+                    <div class="export-option-info">
+                        <div class="export-option-title">Email Summary</div>
+                        <div class="export-option-desc">Shareable digest for team review</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="export-checkbox">
+                <input type="checkbox" id="includeEvidence" checked>
+                <label for="includeEvidence">Include source links and evidence citations</label>
+            </div>
+
+            <div class="export-checkbox" style="margin-top: 8px;">
+                <input type="checkbox" id="includeNotes" checked>
+                <label for="includeNotes">Include thesis fit notes and rationale</label>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeExportModal()">Cancel</button>
+            <a href="/export?format=csv" class="btn btn-primary" style="text-decoration: none;">
+                Export {{ shortlist|length if shortlist else 0 }} Companies
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- New Sprint Modal (loaded via HTMX) -->
+<script>
+function selectExportOption(el) {
+    document.querySelectorAll('.export-option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+}
+</script>

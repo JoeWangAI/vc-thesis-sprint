@@ -1,0 +1,36 @@
+<div class="sprint-title-row">
+    <h1 class="sprint-title">{{ current_sprint.name }}</h1>
+    <div class="sprint-actions">
+        <button class="btn btn-secondary">Edit Criteria</button>
+        <button class="btn btn-primary">+ Add Source</button>
+    </div>
+</div>
+
+<div class="thesis-box">
+    <div class="thesis-label">Thesis</div>
+    <div class="thesis-text">{{ current_sprint.description }}</div>
+</div>
+
+<div class="filters-row">
+    <div class="filter-tag editable">
+        <span class="label">Stage:</span>
+        <span class="value">{{ current_sprint.stage_focus }}</span>
+    </div>
+    <div class="filter-tag editable">
+        <span class="label">Geography:</span>
+        <span class="value">{{ current_sprint.geography }}</span>
+    </div>
+    <div class="filter-tag editable">
+        <span class="label">Last Raise:</span>
+        <span class="value">{{ current_sprint.last_raise_filter }}</span>
+    </div>
+    {% if current_sprint.keywords_include %}
+    <div class="filter-tag editable">
+        <span class="label">Keywords:</span>
+        <span class="value">
+            {% for kw in current_sprint.keywords_include %}+{{ kw }}{% if not loop.last %}, {% endif %}{% endfor %}
+            {% for kw in current_sprint.keywords_exclude %}, -{{ kw }}{% endfor %}
+        </span>
+    </div>
+    {% endif %}
+</div>

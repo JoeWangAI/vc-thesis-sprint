@@ -1,0 +1,149 @@
+<div class="detail-header">
+    <div>
+        <div class="detail-title">{{ company.name }}</div>
+        <div class="detail-subtitle">
+            {% if company.website %}{{ company.website }} · {% endif %}{{ company.location or 'Location unknown' }}
+        </div>
+    </div>
+    <button class="close-btn" onclick="closeDetailPanel()">×</button>
+</div>
+
+<div class="detail-content">
+    <!-- Confidence Overview -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-title">Confidence Score</span>
+        </div>
+        <div class="confidence-meter">
+            <div class="confidence-bar">
+                <div class="confidence-fill {{ company.confidence.value }}"></div>
+            </div>
+            <span class="confidence-text">
+                {% if company.confidence.value == 'high' %}
+                High ({{ company.claims|selectattr('status.value', 'equalto', 'verified')|list|length }}/{{ company.claims|length }} verified)
+                {% elif company.confidence.value == 'medium' %}
+                Medium
+                {% elif company.confidence.value == 'low' %}
+                Low (limited sources)
+                {% else %}
+                Has conflicts
+                {% endif %}
+            </span>
+        </div>
+    </div>
+
+    <!-- Funding Events -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-title">Funding History</span>
+        </div>
+
+        {% for event in company.funding_events %}
+        <div class="funding-event">
+            <div class="funding-event-header">
+                <span class="funding-event-type">
+                    {{ event.round_type }}
+                    <span class="freshness {{ event.freshness.value }}">{{ event.freshness.value|capitalize }}</span>
+                </span>
+                <span class="funding-event-date">{{ event.date.strftime('%B %Y') }}</span>
+            </div>
+            <div class="funding-event-details">
+                <div class="funding-detail">
+                    <span class="funding-detail-label">Amount</span>
+                    <span class="funding-detail-value">{{ event.amount or 'Undisclosed' }}</span>
+                </div>
+                <div class="funding-detail">
+                    <span class="funding-detail-label">Lead Investor</span>
+                    <span class="funding-detail-value">{{ event.lead or 'Unknown' }}</span>
+                </div>
+                {% if event.valuation_signal %}
+                <div class="funding-detail">
+                    <span class="funding-detail-label">Valuation</span>
+                    <span class="funding-detail-value" style="color: var(--text-secondary); font-style: italic;">{{ event.valuation_signal }}</span>
+                </div>
+                {% endif %}
+                {% if event.participants %}
+                <div class="funding-detail">
+                    <span class="funding-detail-label">Participants</span>
+                    <span class="funding-detail-value">{{ event.participants|join(', ') }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-state" style="padding: 20px;">
+            <div class="empty-state-text">No funding events recorded</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Claims & Evidence -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-title">Claims & Evidence</span>
+        </div>
+
+        <div class="claims-list">
+            {% for claim in company.claims %}
+            <div class="claim-card {% if claim.status.value == 'verified' %}verified{% elif claim.status.value == 'conflicting' %}conflict{% endif %}">
+                <div class="claim-header">
+                    <span class="claim-text">"{{ claim.statement }}"</span>
+                    <span class="claim-status {{ claim.status.value }}">{{ claim.status.value }}</span>
+                </div>
+                <div class="claim-sources">
+                    {% for source in claim.sources %}
+                    <div class="claim-source">
+                        <span class="source-type">{{ source.source_type }}</span>
+                        <a href="{{ source.url }}" class="source-link" target="_blank">{{ source.title }}</a>
+                        <span class="source-date">{{ source.timestamp.strftime('%b %d, %Y') }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if claim.status.value != 'verified' %}
+                <div class="claim-actions">
+                    <button class="claim-action-btn accept"
+                            hx-post="/claims/{{ claim.id }}/verify"
+                            hx-target="#detail-panel"
+                            hx-swap="innerHTML">
+                        Accept
+                    </button>
+                    <button class="claim-action-btn">Mark Uncertain</button>
+                    <button class="claim-action-btn">Add Source</button>
+                </div>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="empty-state" style="padding: 20px;">
+                <div class="empty-state-text">No claims recorded</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Thesis Fit Notes -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-title">Thesis Fit Notes</span>
+        </div>
+        <textarea class="notes-textarea"
+                  placeholder="Add notes on why this company fits (or doesn't fit) the thesis..."
+                  hx-post="/companies/{{ company.id }}/notes"
+                  hx-trigger="change"
+                  hx-swap="none">{{ company.thesis_fit_notes or '' }}</textarea>
+    </div>
+</div>
+
+<div class="detail-footer">
+    <button class="btn btn-secondary"
+            hx-delete="/sprints/{{ current_sprint.id }}/shortlist/{{ company.id }}"
+            hx-target="#shortlist-section"
+            hx-swap="innerHTML">
+        Dismiss
+    </button>
+    <button class="btn btn-primary" style="background: var(--accent-green);"
+            hx-post="/sprints/{{ current_sprint.id }}/shortlist/{{ company.id }}?status=pursue"
+            hx-target="#shortlist-section"
+            hx-swap="innerHTML">
+        Add to Shortlist
+    </button>
+</div>

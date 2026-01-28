@@ -1,0 +1,95 @@
+<div class="company-card {% if selected_company_id == company.id %}selected{% endif %}"
+     hx-get="/companies/{{ company.id }}"
+     hx-target="#detail-panel"
+     hx-swap="innerHTML"
+     onclick="document.querySelectorAll('.company-card').forEach(c => c.classList.remove('selected')); this.classList.add('selected');">
+    <div class="company-card-header">
+        <div class="company-info">
+            <div class="company-name">
+                {{ company.name }}
+                {% if company.updated %}
+                <span class="updated-badge">Updated</span>
+                {% endif %}
+            </div>
+            <div class="company-description">{{ company.description }}</div>
+            <div class="company-tags">
+                {% for tag in company.tags %}
+                <span class="tag {% if tag in current_sprint.keywords_include %}match{% endif %}">{{ tag }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="confidence-badge {{ company.confidence.value }}">
+            {% if company.confidence.value == 'high' %}
+            <span>●</span> High confidence
+            {% elif company.confidence.value == 'medium' %}
+            <span>●</span> Medium confidence
+            {% elif company.confidence.value == 'low' %}
+            <span>●</span> Low confidence
+            {% elif company.confidence.value == 'conflict' %}
+            <span>⚠</span> Has conflicts
+            {% endif %}
+        </div>
+    </div>
+
+    {% if company.funding_events %}
+    {% set latest = company.funding_events[0] %}
+    <div class="funding-summary">
+        <div class="funding-item">
+            <span class="funding-label">Last Round</span>
+            <span class="funding-value {% if not latest.amount %}uncertain{% endif %}">
+                {{ latest.round_type }}
+                {% if company.confidence.value == 'conflict' %}
+                <span class="conflict-icon" title="Conflicting reports">⚠</span>
+                {% endif %}
+            </span>
+        </div>
+        <div class="funding-item">
+            <span class="funding-label">Date</span>
+            <span class="funding-value">
+                {{ latest.date.strftime('%b %Y') }}
+                <span class="freshness {{ latest.freshness.value }}">{{ latest.freshness.value|capitalize }}</span>
+            </span>
+        </div>
+        <div class="funding-item">
+            <span class="funding-label">Amount</span>
+            <span class="funding-value {% if not latest.amount %}uncertain{% endif %}">
+                {{ latest.amount or 'Unknown' }}
+            </span>
+        </div>
+        <div class="funding-item">
+            <span class="funding-label">Lead</span>
+            <span class="funding-value {% if not latest.lead %}uncertain{% endif %}">
+                {{ latest.lead or 'Unconfirmed' }}
+            </span>
+        </div>
+        <div class="funding-item">
+            <span class="funding-label">Sources</span>
+            <span class="funding-value">{{ company.source_count }} sources</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="quick-actions">
+        <button class="quick-action-btn pursue"
+                hx-post="/sprints/{{ current_sprint.id }}/shortlist/{{ company.id }}?status=pursue"
+                hx-target="#shortlist-section"
+                hx-swap="innerHTML"
+                onclick="event.stopPropagation();">
+            ✓ Pursue
+        </button>
+        <button class="quick-action-btn watch"
+                hx-post="/sprints/{{ current_sprint.id }}/shortlist/{{ company.id }}?status=watch"
+                hx-target="#shortlist-section"
+                hx-swap="innerHTML"
+                onclick="event.stopPropagation();">
+            ◐ Watch
+        </button>
+        <button class="quick-action-btn"
+                hx-delete="/sprints/{{ current_sprint.id }}/shortlist/{{ company.id }}"
+                hx-target="#shortlist-section"
+                hx-swap="innerHTML"
+                onclick="event.stopPropagation();">
+            ✕ Dismiss
+        </button>
+    </div>
+</div>

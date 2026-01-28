@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Thesis Sprint - VC Target Discovery{% endblock %}
+
+{% block content %}
+<div class="app-container" id="app">
+    <!-- Left Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <div class="logo-icon">◇</div>
+                Thesis Sprint
+            </div>
+        </div>
+
+        <div class="sprint-section">
+            <div class="section-label">Active Sprints</div>
+            <div id="sprint-list" class="sprint-list">
+                {% include "partials/sprint_list.html" %}
+            </div>
+            <button class="new-sprint-btn"
+                    hx-get="/sprints/new"
+                    hx-target="#modal-container"
+                    hx-swap="innerHTML">
+                + New Sprint
+            </button>
+        </div>
+
+        <div class="shortlist-section" id="shortlist-section">
+            {% include "partials/shortlist.html" %}
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Sprint Header -->
+        <header class="sprint-header" id="sprint-header">
+            {% include "partials/sprint_header.html" %}
+        </header>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <div class="view-tabs">
+                    <button class="view-tab active"
+                            hx-get="/sprints/{{ current_sprint.id }}/companies?filter=all"
+                            hx-target="#company-list"
+                            hx-swap="innerHTML">All</button>
+                    <button class="view-tab"
+                            hx-get="/sprints/{{ current_sprint.id }}/companies?filter=needs_review"
+                            hx-target="#company-list"
+                            hx-swap="innerHTML">Needs Review</button>
+                    <button class="view-tab"
+                            hx-get="/sprints/{{ current_sprint.id }}/companies?filter=conflicts"
+                            hx-target="#company-list"
+                            hx-swap="innerHTML">Conflicts</button>
+                    <button class="view-tab"
+                            hx-get="/sprints/{{ current_sprint.id }}/companies?filter=shortlisted"
+                            hx-target="#company-list"
+                            hx-swap="innerHTML">Shortlisted</button>
+                </div>
+                <span class="results-count">{{ companies|length }} companies</span>
+            </div>
+            <div class="toolbar-right">
+                <div class="search-box">
+                    <span>🔍</span>
+                    <input type="text"
+                           placeholder="Search companies..."
+                           name="q"
+                           hx-get="/sprints/{{ current_sprint.id }}/companies"
+                           hx-trigger="keyup changed delay:300ms"
+                           hx-target="#company-list"
+                           hx-swap="innerHTML">
+                </div>
+                <select class="sort-dropdown"
+                        hx-get="/sprints/{{ current_sprint.id }}/companies"
+                        hx-trigger="change"
+                        hx-target="#company-list"
+                        hx-swap="innerHTML"
+                        hx-include="this"
+                        name="sort">
+                    <option value="confidence">Sort by: Confidence</option>
+                    <option value="last_raised">Sort by: Last Raised</option>
+                    <option value="amount">Sort by: Amount</option>
+                    <option value="name">Sort by: Name</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Company List -->
+        <div class="company-list" id="company-list">
+            {% include "partials/company_list.html" %}
+        </div>
+    </main>
+
+    <!-- Detail Panel -->
+    <aside class="detail-panel {% if not selected_company %}hidden{% endif %}" id="detail-panel">
+        {% if selected_company %}
+            {% include "partials/detail_panel.html" %}
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">📋</div>
+                <div class="empty-state-title">No company selected</div>
+                <div class="empty-state-text">Click on a company card to view details and funding context.</div>
+            </div>
+        {% endif %}
+    </aside>
+</div>
+
+<!-- Modal Container -->
+<div id="modal-container"></div>
+
+<!-- Export Modal Template -->
+{% include "components/modals.html" %}
+
+<script>
+    // Tab switching
+    document.querySelectorAll('.view-tab').forEach(tab => {
+        tab.addEventListener('htmx:afterRequest', function() {
+            document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    // Company card selection
+    document.body.addEventListener('htmx:afterSwap', function(evt) {
+        if (evt.detail.target.id === 'detail-panel') {
+            document.getElementById('detail-panel').classList.remove('hidden');
+        }
+    });
+
+    // Close detail panel
+    function closeDetailPanel() {
+        document.getElementById('detail-panel').classList.add('hidden');
+        document.querySelectorAll('.company-card').forEach(c => c.classList.remove('selected'));
+    }
+
+    // Export modal
+    function openExportModal() {
+        document.getElementById('export-modal').classList.add('active');
+    }
+
+    function closeExportModal() {
+        document.getElementById('export-modal').classList.remove('active');
+    }
+
+    // Close modal on overlay click
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal-overlay')) {
+            e.target.classList.remove('active');
+        }
+    });
+</script>
+{% endblock %}

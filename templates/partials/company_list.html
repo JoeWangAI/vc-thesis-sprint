@@ -1,0 +1,9 @@
+{% for company in companies %}
+{% include "partials/company_card.html" %}
+{% else %}
+<div class="empty-state">
+    <div class="empty-state-icon">🔍</div>
+    <div class="empty-state-title">No companies found</div>
+    <div class="empty-state-text">Try adjusting your filters or search criteria.</div>
+</div>
+{% endfor %}
