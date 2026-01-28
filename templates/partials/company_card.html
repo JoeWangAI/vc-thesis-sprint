@@ -12,6 +12,19 @@
                 {% endif %}
             </div>
             <div class="company-description">{{ company.description }}</div>
+            {% if company.fit_score > 0 %}
+            <div class="fit-score-section">
+                <span class="fit-score-label">Thesis Fit:</span>
+                <span class="fit-score-value">{{ company.fit_score }}%</span>
+                {% if company.fit_reasons %}
+                <ul class="fit-reasons">
+                    {% for reason in company.fit_reasons[:2] %}
+                    <li>{{ reason }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            {% endif %}
             <div class="company-tags">
                 {% for tag in company.tags %}
                 <span class="tag {% if tag in current_sprint.keywords_include %}match{% endif %}">{{ tag }}</span>

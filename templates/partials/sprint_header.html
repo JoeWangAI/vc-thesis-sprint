@@ -7,8 +7,13 @@
                 hx-swap="innerHTML">
             Edit Criteria
         </button>
-        <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;" title="Coming soon">
-            + Add Source
+        <button class="btn btn-primary"
+                hx-post="/sprints/{{ current_sprint.id }}/discover"
+                hx-target="#company-list"
+                hx-swap="innerHTML"
+                hx-indicator="#loading-indicator"
+                title="Generate candidate companies using AI">
+            Generate Candidates
         </button>
     </div>
 </div>

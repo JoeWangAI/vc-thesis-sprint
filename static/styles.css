@@ -423,6 +423,29 @@ body {
     padding: 16px 24px;
 }
 
+/* Bucket sections (for discovery results) */
+.bucket-section {
+    margin-bottom: 32px;
+}
+
+.bucket-header {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.bucket-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.bucket-subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
 .company-card {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
@@ -466,6 +489,36 @@ body {
     font-size: 13px;
     color: var(--text-secondary);
     line-height: 1.4;
+}
+
+.fit-score-section {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: var(--bg-tertiary);
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+.fit-score-label {
+    color: var(--text-secondary);
+    margin-right: 6px;
+}
+
+.fit-score-value {
+    color: var(--accent-green);
+    font-weight: 600;
+}
+
+.fit-reasons {
+    margin-top: 6px;
+    margin-left: 16px;
+    list-style-type: disc;
+}
+
+.fit-reasons li {
+    color: var(--text-secondary);
+    line-height: 1.4;
+    margin-bottom: 2px;
 }
 
 .company-tags {

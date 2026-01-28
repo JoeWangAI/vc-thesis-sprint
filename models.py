@@ -11,6 +11,10 @@ class ConfidenceLevel(str, Enum):
     CONFLICT = "conflict"
 
 
+# Alias for backwards compatibility
+Confidence = ConfidenceLevel
+
+
 class ClaimStatus(str, Enum):
     VERIFIED = "verified"
     CONFLICTING = "conflicting"
@@ -59,6 +63,28 @@ class FundingEvent(BaseModel):
     freshness: FreshnessLevel = FreshnessLevel.RECENT
 
 
+class StageEstimate(BaseModel):
+    """Stage estimate with confidence."""
+    stage: str  # "Seed", "Series A", "Series B", "Series C+", "Growth"
+    confidence: ConfidenceLevel = ConfidenceLevel.MEDIUM
+    basis: Optional[str] = None  # Explanation of how stage was determined
+
+
+class FundingSnapshot(BaseModel):
+    """Consolidated funding view with conflict resolution."""
+    last_round_date: Optional[datetime] = None
+    last_round_type: Optional[str] = None
+    amount: Optional[str] = None
+    lead_investor: Optional[str] = None
+    post_money_valuation: Optional[str] = None
+    valuation_confidence: ConfidenceLevel = ConfidenceLevel.MEDIUM
+    valuation_basis: Optional[str] = None  # "direct", "secondary", "implied", "rumor", "estimate"
+    sources: list[Source] = []
+    overall_confidence: ConfidenceLevel = ConfidenceLevel.MEDIUM
+    has_conflicts: bool = False
+    resolution_note: Optional[str] = None
+
+
 class Company(BaseModel):
     id: str
     name: str
@@ -73,6 +99,16 @@ class Company(BaseModel):
     thesis_fit_notes: Optional[str] = None
     source_count: int = 0
     updated: bool = False
+
+    # Discovery/ranking fields
+    fit_score: int = 0  # 0-100 thesis fit score
+    fit_reasons: list[str] = []  # Bullet points explaining fit
+    stage_estimate: Optional[StageEstimate] = None
+    next_action: Optional[str] = None  # For "maybe" bucket: what to check next
+
+    # Validation fields
+    funding_snapshot: Optional[FundingSnapshot] = None
+    validation_status: str = "pending"  # "pending", "validated", "failed"
 
 
 class ShortlistEntry(BaseModel):

@@ -1,3 +1,43 @@
+{% if show_buckets and ranked_buckets %}
+<!-- Bucketed view (post-discovery) -->
+{% if ranked_buckets.recommended %}
+<div class="bucket-section">
+    <div class="bucket-header">
+        <h3 class="bucket-title">Top Recommendations ({{ ranked_buckets.recommended|length }})</h3>
+        <div class="bucket-subtitle">High thesis fit (80%+)</div>
+    </div>
+    {% for company in ranked_buckets.recommended %}
+    {% include "partials/company_card.html" %}
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if ranked_buckets.worth_a_look %}
+<div class="bucket-section">
+    <div class="bucket-header">
+        <h3 class="bucket-title">Worth a Look ({{ ranked_buckets.worth_a_look|length }})</h3>
+        <div class="bucket-subtitle">Good thesis fit (60-79%)</div>
+    </div>
+    {% for company in ranked_buckets.worth_a_look %}
+    {% include "partials/company_card.html" %}
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if ranked_buckets.maybe %}
+<div class="bucket-section">
+    <div class="bucket-header">
+        <h3 class="bucket-title">Maybe ({{ ranked_buckets.maybe|length }})</h3>
+        <div class="bucket-subtitle">Needs validation (&lt;60%)</div>
+    </div>
+    {% for company in ranked_buckets.maybe %}
+    {% include "partials/company_card.html" %}
+    {% endfor %}
+</div>
+{% endif %}
+
+{% else %}
+<!-- Regular list view (no buckets) -->
 {% for company in companies %}
 {% include "partials/company_card.html" %}
 {% else %}
@@ -7,3 +47,4 @@
     <div class="empty-state-text">Try adjusting your filters or search criteria.</div>
 </div>
 {% endfor %}
+{% endif %}

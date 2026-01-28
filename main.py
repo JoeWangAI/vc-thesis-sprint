@@ -12,6 +12,7 @@ import io
 
 from models import ShortlistStatus, ClaimStatus
 from services.data_store import store
+from services.discovery import discovery_service
 
 app = FastAPI(title="Thesis Sprint")
 
@@ -307,6 +308,45 @@ async def update_sprint(request: Request, sprint_id: str):
         "current_sprint": sprint,
     }
     return templates.TemplateResponse("partials/sprint_header.html", context)
+
+
+@app.post("/sprints/{sprint_id}/discover", response_class=HTMLResponse)
+async def discover_candidates(request: Request, sprint_id: str):
+    """Generate candidate companies for a sprint using AI discovery."""
+    sprint = store.get_sprint(sprint_id)
+    if not sprint:
+        return HTMLResponse(status_code=404)
+
+    # Generate candidates using discovery service
+    companies = discovery_service.generate_candidates(
+        thesis_description=sprint.description,
+        keywords_include=sprint.keywords_include,
+        keywords_exclude=sprint.keywords_exclude,
+        stage_preference=sprint.stage_focus,
+        geography=sprint.geography,
+        target_count=50,
+        demo_mode=False  # Set to True to use fixtures if API unavailable
+    )
+
+    # Add companies to store and sprint
+    for company in companies:
+        store.companies[company.id] = company
+        if company.id not in sprint.company_ids:
+            sprint.company_ids.append(company.id)
+
+    # Rank companies into buckets
+    ranked_buckets = discovery_service.rank_candidates(companies, sprint.description)
+
+    # Return updated company list with buckets
+    context = {
+        "request": request,
+        "companies": companies,
+        "current_sprint": sprint,
+        "selected_company_id": None,
+        "ranked_buckets": ranked_buckets,
+        "show_buckets": True
+    }
+    return templates.TemplateResponse("partials/company_list.html", context)
 
 
 @app.get("/export")
