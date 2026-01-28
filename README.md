@@ -127,24 +127,123 @@ The prototype includes 5 sample companies from the "AI Developer Tools" thesis:
 - **CodeWhisperer Labs**: Low confidence, stealth mode
 - **Sourcegraph**: High confidence, but old funding data
 
+## How It Works
+
+### Discovery: AI-Powered Candidate Generation
+
+When you click **"Generate Candidates"** on a sprint:
+
+1. **LLM-Based Research**: Uses Claude API to generate 30-60 candidate companies matching your thesis
+2. **Smart Filtering**: Companies evaluated based on:
+   - Thesis description alignment
+   - Stage preference (Series B+ by default, with Seed/A watchlist)
+   - Geography and keyword criteria
+   - Recent funding activity (last 18-24 months preferred)
+3. **Fit Scoring**: Each company receives a 0-100 thesis fit score with 2-3 bullet-point rationales
+4. **Automatic Bucketing**:
+   - **Top Recommendations** (80%+ fit): High-confidence matches
+   - **Worth a Look** (60-79% fit): Good candidates requiring validation
+   - **Maybe** (<60% fit): Borderline companies with "next action" guidance
+
+**Configuration**: Set stage preference, geography, keywords in sprint criteria (editable in UI)
+
+### Validation: Funding Context with Confidence Scoring
+
+Click **"Validate Funding"** on any company to:
+
+1. **AI Research**: Claude researches recent funding information
+2. **Structured Extraction**: Extracts last round date, type, amount, lead, valuation
+3. **Source Attribution**: Links to sources with trust hierarchy (press release > SEC filing > business press > blog > social)
+4. **Conflict Resolution**: Auto-selects value from highest-trust source when sources disagree, shows conflict badge (⚠)
+5. **Confidence Labels**: High/Medium/Low based on source quality, agreement, recency
+
+**Required Fields**:
+- Last round date (month/year)
+- Round type (Seed/Series A/B/C+)
+- Amount
+- Lead investor
+- Post-money valuation (or estimate with basis: direct/secondary/implied/rumor/estimate)
+- Source link (when available)
+
+**Uncertainty Handling**: Estimates marked with confidence, missing data shown as "N/A" (never invented)
+
+### Claims & Evidence System
+
+Every funding fact backed by:
+- **Claim**: Single assertion with sources
+- **Source**: URL, source type, title, timestamp
+- **Confidence**: High/Medium/Low based on source trust
+- **Status**: Verified, Conflicting, or Unverified
+
+Enables transparent decision-making and easy verification.
+
+## Known Limitations (MVP)
+
+### Data Sources
+- **Public web only**: Uses Claude's knowledge base (cutoff: January 2025)
+- **No paid APIs**: Crunchbase/PitchBook stubbed but not implemented
+- **No real-time scraping**: Future enhancement
+
+### Discovery
+- **AI hallucination risk**: Companies validated for existence but may have inaccuracies
+- **Bias toward well-known companies**: Less coverage of stealth/early-stage startups
+
+### Validation
+- **Knowledge cutoff**: Information may be stale for very recent rounds
+- **Limited conflict resolution**: Simple source trust hierarchy (no manual override yet)
+
+### Technical
+- **In-memory storage**: Data lost on restart (no database)
+- **Single-user**: No authentication or team collaboration
+- **No CRM integration**: Manual export only (CSV/Word)
+
+## Configuration
+
+### Environment Variables
+
+Set `ANTHROPIC_API_KEY` to enable AI features:
+
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."
+uvicorn main:app --reload
+```
+
+### Sprint Criteria (Editable in UI)
+
+- **Stage Focus**: Pre-Seed to Growth, All Stages
+- **Geography**: US, US/Canada, North America, US/EU, Global, Europe, Asia, Latin America
+- **Last Raise Filter**: Within 6/12/18/24/36 months, Any time
+
+### Code Configuration
+
+Edit [services/discovery.py](services/discovery.py):
+- `target_count`: Companies to generate (default: 50)
+- `demo_mode`: Use fixtures for testing
+
+Edit [services/validation.py](services/validation.py):
+- `SOURCE_TRUST_LEVELS`: Adjust trust hierarchy
+- `cache_ttl`: Cache duration (default: 3600s)
+
 ## Roadmap
 
-### Phase 1: Prototype ✅
-- Core UI/UX
-- Manual data entry
-- Basic export
+### Phase 1-4: MVP ✅
+- AI-powered discovery with fit scoring
+- Funding validation with source attribution
+- Conflict detection and resolution
+- Word memo and enhanced CSV export
 
-### Phase 2: AI Integration (Next)
-- Claude API for company generation from thesis
-- Automated funding research with web search
-- Confidence scoring based on source triangulation
+### Phase 5: Production Polish (Next)
+- Demo mode toggle in UI
+- Stage filter enforcement
+- Bulk validation
+- Error handling improvements
 
-### Phase 3: Production Features
+### Phase 6: Production Features
 - Database persistence (PostgreSQL)
 - User authentication
-- Team collaboration
+- Real-time web scraping
+- Crunchbase/PitchBook integration
 - CRM integrations (Affinity, Attio)
-- Real-time data updates
 
 ## Contributing
 
