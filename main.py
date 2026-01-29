@@ -16,11 +16,23 @@ import csv
 import io
 
 from models import ShortlistStatus, ClaimStatus
-from services.data_store import store
+from services.data_store import DataStore
+from services.persistence import get_persistence_manager
 from services.discovery import discovery_service
 from services.validation import validation_service
 from services.data_providers import default_provider
 from services.export import export_service
+import os
+
+# Initialize persistence and data store
+data_dir = os.getenv("DATA_DIR", "./data")
+persistence_enabled = os.getenv("ENABLE_PERSISTENCE", "true").lower() == "true"
+
+if persistence_enabled:
+    persistence_manager = get_persistence_manager(data_dir)
+    store = DataStore(persistence_manager=persistence_manager)
+else:
+    store = DataStore()
 
 # Initialize validation service with data provider
 validation_service.data_provider = default_provider
@@ -30,6 +42,23 @@ app = FastAPI(title="Thesis Sprint")
 # Mount static files and templates
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+
+
+# Lifecycle event handlers
+@app.on_event("startup")
+async def startup_event():
+    """Application startup - persistence already loaded in DataStore.__init__"""
+    import logging
+    logging.info("Application startup - data loaded from persistence")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Application shutdown - save data one final time"""
+    import logging
+    logging.info("Application shutdown - saving data")
+    if persistence_enabled:
+        store._save_to_persistence()
 
 
 def get_common_context(sprint_id: str = "ai-dev-tools"):
@@ -226,6 +255,8 @@ async def update_notes(request: Request, company_id: str):
     company = store.get_company(company_id)
     if company:
         company.thesis_fit_notes = notes
+        # Save to persistence after updating company data
+        store._save_to_persistence()
 
     return HTMLResponse(status_code=204)
 
@@ -314,6 +345,9 @@ async def update_sprint(request: Request, sprint_id: str):
         sprint.geography = form.get("geography", sprint.geography)
         sprint.last_raise_filter = form.get("last_raise_filter", sprint.last_raise_filter)
 
+        # Save to persistence after updating sprint
+        store._save_to_persistence()
+
     context = {
         "request": request,
         "current_sprint": sprint,
@@ -377,6 +411,9 @@ async def discover_candidates(request: Request, sprint_id: str):
         if company.id not in sprint.company_ids:
             sprint.company_ids.append(company.id)
 
+    # Save to persistence after adding companies
+    store._save_to_persistence()
+
     # Rank companies into buckets
     ranked_buckets = discovery_service.rank_candidates(companies, sprint.description)
 
@@ -421,6 +458,9 @@ async def validate_company(request: Request, company_id: str, sprint_id: str = Q
 
     else:
         company.validation_status = "failed"
+
+    # Save to persistence after validation
+    store._save_to_persistence()
 
     # Return updated detail panel
     current_sprint = store.get_sprint(sprint_id)

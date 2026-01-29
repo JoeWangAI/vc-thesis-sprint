@@ -19,5 +19,9 @@ build/
 .DS_Store
 Thumbs.db
 
+# Data persistence
+data/
+*.json.backup
+
 # Project specific
 wireframe.html

@@ -2,17 +2,41 @@
 In-memory data store with sample data for the prototype.
 """
 from datetime import datetime, timedelta
+from typing import Optional
+import logging
 from models import (
     ThesisSprint, Company, FundingEvent, Claim, Source, ShortlistEntry,
     ConfidenceLevel, ClaimStatus, ShortlistStatus, FreshnessLevel
 )
 
+logger = logging.getLogger(__name__)
+
 
 class DataStore:
-    def __init__(self):
+    def __init__(self, persistence_manager=None):
+        """
+        Initialize DataStore with optional persistence.
+
+        Args:
+            persistence_manager: Optional PersistenceManager for saving/loading data
+        """
         self.sprints: dict[str, ThesisSprint] = {}
         self.companies: dict[str, Company] = {}
-        self._init_sample_data()
+        self.persistence_manager = persistence_manager
+
+        # Try to load from disk if persistence is enabled
+        if persistence_manager:
+            loaded = persistence_manager.load_from_disk()
+            if loaded:
+                self.sprints, self.companies = loaded
+                logger.info("Loaded data from persistence")
+            else:
+                logger.info("No persisted data found, initializing with sample data")
+                self._init_sample_data()
+                # Save immediately so the data is persisted
+                self._save_to_persistence()
+        else:
+            self._init_sample_data()
 
     def _init_sample_data(self):
         """Initialize with sample data from the wireframe."""
@@ -309,6 +333,15 @@ class DataStore:
         self.sprints["climate-fintech"] = climate_sprint
         self.sprints["healthcare-llms"] = healthcare_sprint
 
+    def _save_to_persistence(self) -> None:
+        """Save current state to disk if persistence is enabled."""
+        if self.persistence_manager:
+            try:
+                self.persistence_manager.save_to_disk(self.sprints, self.companies)
+            except Exception as e:
+                logger.error(f"Failed to save data: {e}")
+                # Don't crash the app on save errors
+
     def get_sprint(self, sprint_id: str) -> ThesisSprint | None:
         return self.sprints.get(sprint_id)
 
@@ -349,6 +382,9 @@ class DataStore:
             status=status,
             added_at=datetime.now()
         ))
+
+        # Save to persistence
+        self._save_to_persistence()
         return True
 
     def remove_from_shortlist(self, sprint_id: str, company_id: str) -> bool:
@@ -356,6 +392,9 @@ class DataStore:
         if not sprint:
             return False
         sprint.shortlist = [e for e in sprint.shortlist if e.company_id != company_id]
+
+        # Save to persistence
+        self._save_to_persistence()
         return True
 
     def update_claim_status(self, claim_id: str, new_status: ClaimStatus) -> bool:
@@ -363,6 +402,9 @@ class DataStore:
             for claim in company.claims:
                 if claim.id == claim_id:
                     claim.status = new_status
+
+                    # Save to persistence
+                    self._save_to_persistence()
                     return True
         return False
 
@@ -377,12 +419,18 @@ class DataStore:
             shortlist=[]
         )
         self.sprints[sprint_id] = sprint
+
+        # Save to persistence
+        self._save_to_persistence()
         return sprint
 
     def delete_sprint(self, sprint_id: str) -> bool:
         """Delete a sprint. Returns True if deleted, False if not found."""
         if sprint_id in self.sprints:
             del self.sprints[sprint_id]
+
+            # Save to persistence
+            self._save_to_persistence()
             return True
         return False
 
