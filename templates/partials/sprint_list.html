@@ -1,11 +1,22 @@
 {% for sprint in sprints %}
-<a href="/?sprint={{ sprint.id }}"
-   class="sprint-item {% if sprint.id == current_sprint_id %}active{% endif %}"
-   style="text-decoration: none; color: inherit; display: block;">
-    <div class="sprint-name">{{ sprint.name }}</div>
-    <div class="sprint-meta">
-        <span>{{ sprint.company_ids|length }} companies</span>
-        <span>{{ sprint.shortlist|length }} shortlisted</span>
-    </div>
-</a>
+<div class="sprint-item-wrapper {% if sprint.id == current_sprint_id %}active{% endif %}">
+    <a href="/?sprint={{ sprint.id }}"
+       class="sprint-item"
+       style="text-decoration: none; color: inherit; display: block; flex: 1;">
+        <div class="sprint-name">{{ sprint.name }}</div>
+        <div class="sprint-meta">
+            <span>{{ sprint.company_ids|length }} companies</span>
+            <span>{{ sprint.shortlist|length }} shortlisted</span>
+        </div>
+    </a>
+    <button class="sprint-delete-btn"
+            hx-delete="/sprints/{{ sprint.id }}?current={{ current_sprint_id }}"
+            hx-target="#sprint-list"
+            hx-swap="innerHTML"
+            hx-confirm="Delete '{{ sprint.name }}'? This cannot be undone."
+            onclick="event.stopPropagation();"
+            title="Delete sprint">
+        ×
+    </button>
+</div>
 {% endfor %}

@@ -88,8 +88,19 @@
         </div>
 
         <!-- Company List -->
-        <div class="company-list" id="company-list">
-            {% include "partials/company_list.html" %}
+        <div class="company-list-wrapper">
+            <div class="company-list" id="company-list">
+                {% include "partials/company_list.html" %}
+            </div>
+            <!-- Loading Overlay -->
+            <div id="discovery-loading-overlay" class="loading-overlay htmx-indicator">
+                <div class="loading-overlay-content">
+                    <div class="loading-spinner-large"></div>
+                    <div class="loading-overlay-title">Discovering Companies</div>
+                    <div class="loading-overlay-text">Using AI to analyze and generate candidate companies...</div>
+                    <div class="loading-overlay-subtext">This typically takes 10-15 seconds</div>
+                </div>
+            </div>
         </div>
     </main>
 

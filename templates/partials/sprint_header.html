@@ -7,14 +7,26 @@
                 hx-swap="innerHTML">
             Edit Criteria
         </button>
-        <button class="btn btn-primary"
+        <button class="btn btn-primary" id="generate-btn"
                 hx-post="/sprints/{{ current_sprint.id }}/discover"
                 hx-target="#company-list"
                 hx-swap="innerHTML"
-                hx-indicator="#loading-indicator"
+                hx-indicator="#generate-loading-indicator, #discovery-loading-overlay"
+                hx-disabled-elt="this"
+                aria-label="Generate candidate companies using AI"
                 title="Generate candidate companies using AI">
-            Generate Candidates
+            <span class="btn-text">Generate Candidates</span>
+            <span class="btn-loading"
+                  role="status"
+                  aria-live="polite">
+                <span class="loading-spinner" aria-hidden="true"></span>
+                Generating...
+            </span>
         </button>
+        <div id="generate-loading-indicator" class="generate-loading-details htmx-indicator">
+            <span class="loading-spinner"></span>
+            Using AI to analyze companies. This typically takes 10-15 seconds.
+        </div>
     </div>
 </div>
 

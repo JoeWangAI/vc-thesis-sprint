@@ -41,8 +41,13 @@
                     hx-post="/companies/{{ company.id }}/validate?sprint_id={{ current_sprint.id }}"
                     hx-target="#detail-panel"
                     hx-swap="innerHTML"
-                    hx-indicator="#validation-indicator">
-                Validate Funding
+                    hx-indicator=".validation-loading"
+                    hx-disabled-elt="this">
+                <span class="btn-text">Validate Funding</span>
+                <span class="btn-loading validation-loading htmx-indicator">
+                    <span class="loading-spinner"></span>
+                    Validating...
+                </span>
             </button>
             {% elif company.validation_status == "validated" %}
             <span class="validation-status validated">✓ Validated</span>
@@ -50,7 +55,6 @@
             <span class="validation-status failed">✗ Validation Failed</span>
             {% endif %}
         </div>
-        <div id="validation-indicator" class="htmx-indicator">Validating...</div>
 
         {% if company.funding_snapshot %}
         <div class="funding-snapshot">

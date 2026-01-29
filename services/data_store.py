@@ -379,6 +379,19 @@ class DataStore:
         self.sprints[sprint_id] = sprint
         return sprint
 
+    def delete_sprint(self, sprint_id: str) -> bool:
+        """Delete a sprint. Returns True if deleted, False if not found."""
+        if sprint_id in self.sprints:
+            del self.sprints[sprint_id]
+            return True
+        return False
+
+    def get_default_sprint_id(self) -> str:
+        """Get a default sprint ID (first available sprint)."""
+        if self.sprints:
+            return next(iter(self.sprints.keys()))
+        return "ai-dev-tools"  # Fallback to default
+
 
 # Global singleton
 store = DataStore()

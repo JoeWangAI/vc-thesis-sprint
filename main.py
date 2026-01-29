@@ -2,7 +2,12 @@
 Thesis Sprint - VC Target Discovery Tool
 FastAPI application with HTMX frontend
 """
-from fastapi import FastAPI, Request, Query
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+from fastapi import FastAPI, Request, Query, Response
 from fastapi.responses import HTMLResponse, StreamingResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -314,6 +319,38 @@ async def update_sprint(request: Request, sprint_id: str):
         "current_sprint": sprint,
     }
     return templates.TemplateResponse("partials/sprint_header.html", context)
+
+
+@app.delete("/sprints/{sprint_id}")
+async def delete_sprint(request: Request, sprint_id: str, current: str = Query(None)):
+    """Delete a sprint. If it's the active sprint, redirect to another."""
+    # Delete the sprint
+    success = store.delete_sprint(sprint_id)
+
+    if not success:
+        return Response(status_code=404)
+
+    # Get remaining sprints
+    sprints = list(store.sprints.values())
+    current_sprint_id = current or store.get_default_sprint_id()
+
+    # If we deleted the currently active sprint, send redirect header
+    if current == sprint_id:
+        new_sprint_id = store.get_default_sprint_id()
+        # Return redirect using HTMX HX-Redirect header
+        return Response(
+            status_code=200,
+            headers={"HX-Redirect": f"/?sprint={new_sprint_id}"}
+        )
+
+    # Otherwise, return the updated sprint list
+    context = {
+        "request": request,
+        "sprints": sprints,
+        "current_sprint_id": current_sprint_id,
+    }
+
+    return templates.TemplateResponse("partials/sprint_list.html", context)
 
 
 @app.post("/sprints/{sprint_id}/discover", response_class=HTMLResponse)
