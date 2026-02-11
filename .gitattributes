@@ -1,0 +1,21 @@
+# Ensure consistent line endings across platforms
+* text=auto
+
+# JSON files should always use LF line endings
+*.json text eol=lf
+
+# Python files
+*.py text eol=lf
+
+# Documentation
+*.md text eol=lf
+
+# Templates
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+
+# Configuration files
+.env text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf

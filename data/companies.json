@@ -1,0 +1,378 @@
+{
+  "cursor": {
+    "id": "cursor",
+    "name": "Cursor",
+    "description": "AI-first code editor built on VS Code, featuring native AI code generation, chat, and codebase understanding.",
+    "website": "cursor.sh",
+    "location": "San Francisco, CA",
+    "tags": [
+      "AI coding",
+      "IDE",
+      "Developer Tools"
+    ],
+    "stage": "Series B",
+    "confidence": "high",
+    "funding_events": [
+      {
+        "id": "cursor-b",
+        "company_id": "cursor",
+        "round_type": "Series B",
+        "date": "2025-01-16T00:00:00",
+        "amount": "$105M",
+        "lead": "Thrive Capital",
+        "participants": [
+          "a16z",
+          "Spark Capital"
+        ],
+        "valuation_signal": "~$2.5B (signal)",
+        "freshness": "fresh"
+      },
+      {
+        "id": "cursor-a",
+        "company_id": "cursor",
+        "round_type": "Series A",
+        "date": "2023-10-01T00:00:00",
+        "amount": "$20M",
+        "lead": "OpenAI Startup Fund",
+        "participants": [],
+        "valuation_signal": null,
+        "freshness": "stale"
+      }
+    ],
+    "claims": [
+      {
+        "id": "cursor-c1",
+        "company_id": "cursor",
+        "statement": "Cursor raised $105M Series B at ~$2.5B valuation led by Thrive Capital",
+        "sources": [
+          {
+            "id": "s1",
+            "url": "https://techcrunch.com/cursor-series-b",
+            "source_type": "news",
+            "title": "TechCrunch article",
+            "timestamp": "2026-01-17T19:33:29.807248"
+          },
+          {
+            "id": "s2",
+            "url": "https://cursor.sh/blog/series-b",
+            "source_type": "official",
+            "title": "Cursor blog post",
+            "timestamp": "2026-01-17T19:33:29.807251"
+          },
+          {
+            "id": "s3",
+            "url": "https://crunchbase.com/cursor",
+            "source_type": "database",
+            "title": "Crunchbase",
+            "timestamp": "2026-01-18T19:33:29.807252"
+          }
+        ],
+        "confidence": "high",
+        "status": "verified"
+      },
+      {
+        "id": "cursor-c2",
+        "company_id": "cursor",
+        "statement": "Cursor has over 50,000 paid users",
+        "sources": [
+          {
+            "id": "s4",
+            "url": "https://twitter.com/cursor",
+            "source_type": "social",
+            "title": "Cursor Twitter",
+            "timestamp": "2026-01-16T19:33:29.807254"
+          }
+        ],
+        "confidence": "medium",
+        "status": "unverified"
+      }
+    ],
+    "thesis_fit_notes": "Strong fit: Direct AI coding tool, high growth trajectory, well-funded, strong technical team. Watch: Late stage (Series B) may limit upside. Competition from GitHub Copilot and emerging players.",
+    "source_count": 4,
+    "updated": true,
+    "fit_score": 0,
+    "fit_reasons": [],
+    "stage_estimate": null,
+    "next_action": null,
+    "funding_snapshot": null,
+    "validation_status": "pending"
+  },
+  "codeium": {
+    "id": "codeium",
+    "name": "Codeium",
+    "description": "Free AI-powered code completion and search tool supporting 70+ languages with enterprise features.",
+    "website": "codeium.com",
+    "location": "Mountain View, CA",
+    "tags": [
+      "AI coding",
+      "Code completion",
+      "Enterprise"
+    ],
+    "stage": "Series C",
+    "confidence": "conflict",
+    "funding_events": [
+      {
+        "id": "codeium-c",
+        "company_id": "codeium",
+        "round_type": "Series C",
+        "date": "2024-08-15T00:00:00",
+        "amount": "$150M",
+        "lead": "Greenoaks",
+        "participants": [
+          "General Catalyst",
+          "Kleiner Perkins"
+        ],
+        "valuation_signal": null,
+        "freshness": "recent"
+      }
+    ],
+    "claims": [
+      {
+        "id": "codeium-c1",
+        "company_id": "codeium",
+        "statement": "Codeium raised $150M Series C led by Greenoaks",
+        "sources": [
+          {
+            "id": "cs1",
+            "url": "https://techcrunch.com/codeium",
+            "source_type": "news",
+            "title": "TechCrunch",
+            "timestamp": "2025-08-21T19:33:29.807268"
+          }
+        ],
+        "confidence": "high",
+        "status": "verified"
+      },
+      {
+        "id": "codeium-c2",
+        "company_id": "codeium",
+        "statement": "Round size was $150M",
+        "sources": [
+          {
+            "id": "cs2",
+            "url": "https://crunchbase.com/codeium",
+            "source_type": "database",
+            "title": "Crunchbase",
+            "timestamp": "2025-08-23T19:33:29.807271"
+          }
+        ],
+        "confidence": "medium",
+        "status": "conflicting"
+      },
+      {
+        "id": "codeium-c3",
+        "company_id": "codeium",
+        "statement": "Round size was $165M",
+        "sources": [
+          {
+            "id": "cs3",
+            "url": "https://pitchbook.com/codeium",
+            "source_type": "database",
+            "title": "PitchBook",
+            "timestamp": "2025-08-26T19:33:29.807273"
+          }
+        ],
+        "confidence": "medium",
+        "status": "conflicting"
+      }
+    ],
+    "thesis_fit_notes": null,
+    "source_count": 6,
+    "updated": false,
+    "fit_score": 0,
+    "fit_reasons": [],
+    "stage_estimate": null,
+    "next_action": null,
+    "funding_snapshot": null,
+    "validation_status": "pending"
+  },
+  "replit": {
+    "id": "replit",
+    "name": "Replit",
+    "description": "Browser-based IDE with AI coding assistant, multiplayer collaboration, and instant deployment.",
+    "website": "replit.com",
+    "location": "San Francisco, CA",
+    "tags": [
+      "AI coding",
+      "Cloud IDE",
+      "Education"
+    ],
+    "stage": "Series B",
+    "confidence": "medium",
+    "funding_events": [
+      {
+        "id": "replit-b",
+        "company_id": "replit",
+        "round_type": "Series B",
+        "date": "2023-04-01T00:00:00",
+        "amount": "$97.4M",
+        "lead": "a16z",
+        "participants": [
+          "Khosla Ventures",
+          "Coatue"
+        ],
+        "valuation_signal": null,
+        "freshness": "stale"
+      }
+    ],
+    "claims": [
+      {
+        "id": "replit-c1",
+        "company_id": "replit",
+        "statement": "Replit raised $97.4M Series B led by a16z in April 2023",
+        "sources": [
+          {
+            "id": "rs1",
+            "url": "https://replit.com/blog/series-b",
+            "source_type": "official",
+            "title": "Replit Blog",
+            "timestamp": "2024-04-28T19:33:29.807280"
+          },
+          {
+            "id": "rs2",
+            "url": "https://crunchbase.com/replit",
+            "source_type": "database",
+            "title": "Crunchbase",
+            "timestamp": "2024-05-03T19:33:29.807281"
+          }
+        ],
+        "confidence": "high",
+        "status": "verified"
+      }
+    ],
+    "thesis_fit_notes": null,
+    "source_count": 3,
+    "updated": false,
+    "fit_score": 0,
+    "fit_reasons": [],
+    "stage_estimate": null,
+    "next_action": null,
+    "funding_snapshot": null,
+    "validation_status": "pending"
+  },
+  "codewhisperer-labs": {
+    "id": "codewhisperer-labs",
+    "name": "CodeWhisperer Labs",
+    "description": "Stealth-mode AI debugging platform with automated root cause analysis.",
+    "website": null,
+    "location": "Unknown",
+    "tags": [
+      "AI coding",
+      "Debugging",
+      "Stealth"
+    ],
+    "stage": "Seed (rumored)",
+    "confidence": "low",
+    "funding_events": [
+      {
+        "id": "cwl-seed",
+        "company_id": "codewhisperer-labs",
+        "round_type": "Seed",
+        "date": "2024-09-01T00:00:00",
+        "amount": null,
+        "lead": null,
+        "participants": [],
+        "valuation_signal": null,
+        "freshness": "recent"
+      }
+    ],
+    "claims": [
+      {
+        "id": "cwl-c1",
+        "company_id": "codewhisperer-labs",
+        "statement": "CodeWhisperer Labs raised a seed round in Q3 2024",
+        "sources": [
+          {
+            "id": "cwls1",
+            "url": "https://twitter.com/vcinsider",
+            "source_type": "social",
+            "title": "VC Insider tweet",
+            "timestamp": "2025-09-30T19:33:29.807291"
+          }
+        ],
+        "confidence": "low",
+        "status": "unverified"
+      }
+    ],
+    "thesis_fit_notes": null,
+    "source_count": 1,
+    "updated": false,
+    "fit_score": 0,
+    "fit_reasons": [],
+    "stage_estimate": null,
+    "next_action": null,
+    "funding_snapshot": null,
+    "validation_status": "pending"
+  },
+  "sourcegraph": {
+    "id": "sourcegraph",
+    "name": "Sourcegraph",
+    "description": "Code intelligence platform with universal code search and AI-powered coding assistant (Cody).",
+    "website": "sourcegraph.com",
+    "location": "San Francisco, CA",
+    "tags": [
+      "AI coding",
+      "Code Search",
+      "Enterprise"
+    ],
+    "stage": "Series D",
+    "confidence": "high",
+    "funding_events": [
+      {
+        "id": "sg-d",
+        "company_id": "sourcegraph",
+        "round_type": "Series D",
+        "date": "2021-07-01T00:00:00",
+        "amount": "$125M",
+        "lead": "Andreessen Horowitz",
+        "participants": [
+          "Insight Partners",
+          "Geodesic Capital"
+        ],
+        "valuation_signal": null,
+        "freshness": "old"
+      }
+    ],
+    "claims": [
+      {
+        "id": "sg-c1",
+        "company_id": "sourcegraph",
+        "statement": "Sourcegraph raised $125M Series D led by a16z in July 2021",
+        "sources": [
+          {
+            "id": "sgs1",
+            "url": "https://sourcegraph.com/blog/series-d",
+            "source_type": "official",
+            "title": "Sourcegraph Blog",
+            "timestamp": "2022-07-08T19:33:29.807297"
+          },
+          {
+            "id": "sgs2",
+            "url": "https://techcrunch.com/sourcegraph",
+            "source_type": "news",
+            "title": "TechCrunch",
+            "timestamp": "2022-07-10T19:33:29.807299"
+          },
+          {
+            "id": "sgs3",
+            "url": "https://crunchbase.com/sourcegraph",
+            "source_type": "database",
+            "title": "Crunchbase",
+            "timestamp": "2022-07-13T19:33:29.807300"
+          }
+        ],
+        "confidence": "high",
+        "status": "verified"
+      }
+    ],
+    "thesis_fit_notes": null,
+    "source_count": 5,
+    "updated": false,
+    "fit_score": 0,
+    "fit_reasons": [],
+    "stage_estimate": null,
+    "next_action": null,
+    "funding_snapshot": null,
+    "validation_status": "pending"
+  }
+}

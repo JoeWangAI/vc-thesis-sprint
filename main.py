@@ -20,7 +20,7 @@ from services.data_store import DataStore
 from services.persistence import get_persistence_manager
 from services.discovery import discovery_service
 from services.validation import validation_service
-from services.data_providers import default_provider
+from services.data_providers import get_data_provider
 from services.export import export_service
 import os
 
@@ -34,8 +34,8 @@ if persistence_enabled:
 else:
     store = DataStore()
 
-# Initialize validation service with data provider
-validation_service.data_provider = default_provider
+# Initialize validation service with configured data provider
+validation_service.data_provider = get_data_provider()
 
 app = FastAPI(title="Thesis Sprint")
 

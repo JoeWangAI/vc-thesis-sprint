@@ -20,8 +20,10 @@ build/
 Thumbs.db
 
 # Data persistence
-data/
+# Note: data/ is now tracked for multi-computer sync
+# Only backup files are ignored
 *.json.backup
+data/*.backup
 
 # Project specific
 wireframe.html

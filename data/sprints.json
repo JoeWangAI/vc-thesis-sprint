@@ -1,0 +1,89 @@
+{
+  "ai-dev-tools": {
+    "id": "ai-dev-tools",
+    "name": "AI Developer Tools",
+    "description": "Companies building AI-powered tools that augment software developers' productivity, including code generation, code review, debugging assistants, and intelligent IDE features. Focus on Series A–B stage with demonstrated traction.",
+    "keywords_include": [
+      "AI coding",
+      "copilot",
+      "code generation",
+      "IDE"
+    ],
+    "keywords_exclude": [
+      "blockchain",
+      "crypto"
+    ],
+    "stage_focus": "Seed – Series B",
+    "geography": "US, EU",
+    "last_raise_filter": "Within 18 months",
+    "status": "active",
+    "company_ids": [
+      "cursor",
+      "codeium",
+      "replit",
+      "codewhisperer-labs",
+      "sourcegraph"
+    ],
+    "shortlist": [
+      {
+        "company_id": "cursor",
+        "status": "pursue",
+        "rationale": null,
+        "added_at": "2026-01-26T19:33:29.807306"
+      },
+      {
+        "company_id": "codeium",
+        "status": "pursue",
+        "rationale": null,
+        "added_at": "2026-01-25T19:33:29.807308"
+      },
+      {
+        "company_id": "replit",
+        "status": "watch",
+        "rationale": null,
+        "added_at": "2026-01-27T19:33:29.807309"
+      },
+      {
+        "company_id": "sourcegraph",
+        "status": "pursue",
+        "rationale": null,
+        "added_at": "2026-01-24T19:33:29.807310"
+      }
+    ]
+  },
+  "climate-fintech": {
+    "id": "climate-fintech",
+    "name": "Climate Fintech",
+    "description": "Financial technology solutions focused on climate and sustainability.",
+    "keywords_include": [
+      "climate",
+      "carbon",
+      "ESG",
+      "sustainability"
+    ],
+    "keywords_exclude": [],
+    "stage_focus": "Seed – Series B",
+    "geography": "US, EU",
+    "last_raise_filter": "Within 18 months",
+    "status": "active",
+    "company_ids": [],
+    "shortlist": []
+  },
+  "healthcare-llms": {
+    "id": "healthcare-llms",
+    "name": "Healthcare LLMs",
+    "description": "Large language models and AI applications in healthcare.",
+    "keywords_include": [
+      "healthcare",
+      "medical AI",
+      "clinical"
+    ],
+    "keywords_exclude": [],
+    "stage_focus": "Seed – Series B",
+    "geography": "US, EU",
+    "last_raise_filter": "Within 18 months",
+    "status": "active",
+    "company_ids": [],
+    "shortlist": []
+  }
+}
